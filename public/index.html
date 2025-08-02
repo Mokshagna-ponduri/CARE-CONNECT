@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Community-Driven Help Platform</title>
+    <meta name="description" content="Connect with your community to seek and offer help. Food, tutoring, elder care, emergency assistance, and more.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-heart"></i>
+                <span>CareConnect</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#requests" class="nav-link">Help Requests</a>
+                <a href="#profile" class="nav-link" id="profile-nav-link" style="display: none;">Profile</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <div class="nav-auth" id="nav-auth">
+                    <button class="btn btn-primary" id="login-btn">Login</button>
+                    <button class="btn btn-secondary" id="register-btn">Sign Up</button>
+                </div>
+                <div class="nav-user" id="nav-user" style="display: none;">
+                    <div class="user-menu">
+                        <img src="https://via.placeholder.com/32" alt="Avatar" class="user-avatar" id="user-avatar">
+                        <span class="user-name" id="user-name">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <div class="user-dropdown">
+                            <a href="#profile" class="dropdown-item"><i class="fas fa-user"></i> Profile</a>
+                            <a href="#my-requests" class="dropdown-item"><i class="fas fa-list"></i> My Requests</a>
+                            <a href="#chats" class="dropdown-item"><i class="fas fa-comments"></i> Messages</a>
+                            <button class="dropdown-item" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">How can we help today?</h1>
+                    <p class="hero-subtitle">Connect with your community to seek and offer help. Together, we make our neighborhoods stronger.</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary btn-large" id="seek-help-btn">
+                            <i class="fas fa-hands-helping"></i>
+                            I Need Help
+                        </button>
+                        <button class="btn btn-secondary btn-large" id="offer-help-btn">
+                            <i class="fas fa-heart"></i>
+                            I Want to Help
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-illustration">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features">
+                <h2 class="section-title">Why CareConnect?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3>Local Community</h3>
+                        <p>Connect with people in your neighborhood for immediate, relevant assistance.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Safe & Secure</h3>
+                        <p>Verified users and secure messaging ensure your safety and privacy.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>Quick Response</h3>
+                        <p>Get help when you need it most with our real-time notification system.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3>Trusted Network</h3>
+                        <p>Build trust through ratings and reviews from community members.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Help Requests Section -->
+        <section id="requests" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Help Requests</h2>
+                    <button class="btn btn-primary" id="create-request-btn" style="display: none;">
+                        <i class="fas fa-plus"></i>
+                        Create Request
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <select id="category-filter" class="filter-select">
+                            <option value="">All Categories</option>
+                            <option value="food">Food</option>
+                            <option value="education">Education</option>
+                            <option value="medical">Medical</option>
+                            <option value="elderly-care">Elderly Care</option>
+                            <option value="emergency">Emergency</option>
+                            <option value="transportation">Transportation</option>
+                            <option value="household">Household</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <select id="urgency-filter" class="filter-select">
+                            <option value="">All Urgency</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <button class="btn btn-outline" id="location-filter-btn">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Use My Location
+                        </button>
+                    </div>
+                </div>
+
+                <div class="requests-container">
+                    <div class="requests-grid" id="requests-grid">
+                        <!-- Requests will be loaded here -->
+                    </div>
+                    <div class="loading" id="requests-loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading help requests...</p>
+                    </div>
+                    <div class="no-requests" id="no-requests" style="display: none;">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No help requests found</h3>
+                        <p>Be the first to create a help request in your area!</p>
+                    </div>
+                </div>
+
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="btn btn-outline" id="prev-page">Previous</button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button class="btn btn-outline" id="next-page">Next</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Request Modal -->
+        <div class="modal" id="create-request-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create Help Request</h3>
+                    <button class="modal-close" id="close-create-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="create-request-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="request-title">Title *</label>
+                        <input type="text" id="request-title" name="title" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="request-description">Description *</label>
+                        <textarea id="request-description" name="description" required maxlength="1000" rows="4"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="request-category">Category *</label>
+                            <select id="request-category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="food">Food</option>
+                                <option value="education">Education</option>
+                                <option value="medical">Medical</option>
+                                <option value="elderly-care">Elderly Care</option>
+                                <option value="emergency">Emergency</option>
+                                <option value="transportation">Transportation</option>
+                                <option value="household">Household</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="request-urgency">Urgency *</label>
+                            <select id="request-urgency" name="urgency" required>
+                                <option value="">Select Urgency</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="request-location">Location</label>
+                        <input type="text" id="request-location" name="location" placeholder="Enter your address or use current location">
+                        <button type="button" class="btn btn-outline btn-small" id="use-current-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Use Current Location
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="request-anonymous" name="isAnonymous">
+                            Post anonymously
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="cancel-create">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Request Details Modal -->
+        <div class="modal" id="request-details-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="request-details-title">Help Request Details</h3>
+                    <button class="modal-close" id="close-details-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="request-details-body">
+                    <!-- Request details will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Modals -->
+        <div class="modal" id="login-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Login</h3>
+                    <button class="modal-close" id="close-login-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="login-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="switch-to-register">Create Account</button>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal" id="register-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create Account</h3>
+                    <button class="modal-close" id="close-register-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="register-form" class="modal-form">
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-phone">Phone (Optional)</label>
+                        <input type="tel" id="register-phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-role">I want to:</label>
+                        <select id="register-role" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="seeker">Seek Help</option>
+                            <option value="helper">Offer Help</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="switch-to-login">Already have an account?</button>
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Chat Modal -->
+        <div class="modal" id="chat-modal">
+            <div class="modal-content chat-modal">
+                <div class="modal-header">
+                    <h3 id="chat-title">Chat</h3>
+                    <button class="modal-close" id="close-chat-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="message-input" placeholder="Type your message...">
+                        <button id="send-message-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <section id="profile" class="section">
+            <div class="container">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <img src="https://via.placeholder.com/120" alt="Profile" id="profile-avatar-img">
+                        <button class="btn btn-outline btn-small" id="change-avatar-btn">Change</button>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profile-name">User Name</h2>
+                        <p id="profile-email">user@example.com</p>
+                        <div class="profile-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span id="profile-rating-text">4.5 (12 reviews)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="requests-made">0</div>
+                        <div class="stat-label">Requests Made</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="requests-helped">0</div>
+                        <div class="stat-label">Requests Helped</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completion-rate">0%</div>
+                        <div class="stat-label">Completion Rate</div>
+                    </div>
+                </div>
+
+                <div class="profile-sections">
+                    <div class="profile-section">
+                        <h3>Edit Profile</h3>
+                        <form id="profile-form" class="profile-form">
+                            <div class="form-group">
+                                <label for="profile-name-input">Name</label>
+                                <input type="text" id="profile-name-input" name="name">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-phone">Phone</label>
+                                <input type="tel" id="profile-phone" name="phone">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-bio">Bio</label>
+                                <textarea id="profile-bio" name="bio" rows="3" maxlength="500"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-skills">Skills (comma separated)</label>
+                                <input type="text" id="profile-skills" name="skills" placeholder="e.g., cooking, tutoring, driving">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="profile-section">
+                        <h3>Recent Activity</h3>
+                        <div class="activity-list" id="activity-list">
+                            <!-- Activity items will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Requests Section -->
+        <section id="my-requests" class="section">
+            <div class="container">
+                <h2 class="section-title">My Requests</h2>
+                <div class="requests-container">
+                    <div class="section-header">
+                        <div class="filters">
+                            <div class="filter-group">
+                                <select id="my-requests-filter" class="filter-select">
+                                    <option value="all">All Requests</option>
+                                    <option value="requested">Requests I Made</option>
+                                    <option value="helped">Requests I Helped</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="my-requests-loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading your requests...</p>
+                    </div>
+                    <div id="my-requests-grid" class="requests-grid">
+                        <!-- My requests will be loaded here -->
+                    </div>
+                    <div id="no-my-requests" class="no-requests" style="display: none;">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No requests yet</h3>
+                        <p>You haven't made or helped with any requests yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chats Section -->
+        <section id="chats" class="section">
+            <div class="container">
+                <h2 class="section-title">Messages</h2>
+                <div class="chats-container">
+                    <div id="chats-loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Loading your messages...</p>
+                    </div>
+                    <div id="chats-list" class="chats-list">
+                        <!-- Chat list will be loaded here -->
+                    </div>
+                    <div id="no-chats" class="no-requests" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <h3>No messages yet</h3>
+                        <p>You don't have any active conversations yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <div class="container">
+                <h2 class="section-title">About CareConnect</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>CareConnect is a community-driven platform that bridges the gap between people who need help and those willing to offer it. In times of personal or public crisis, people can easily reach out for support or volunteer to help others, making communities resilient and caring.</p>
+                        
+                        <h3>Our Mission</h3>
+                        <p>To create stronger, more connected communities by facilitating meaningful help exchanges between neighbors.</p>
+                        
+                        <h3>How It Works</h3>
+                        <ol>
+                            <li><strong>Create a Request:</strong> Post what you need help with, from food delivery to tutoring.</li>
+                            <li><strong>Find Help:</strong> Browse nearby requests and offer your assistance.</li>
+                            <li><strong>Connect:</strong> Chat securely with other community members.</li>
+                            <li><strong>Help & Rate:</strong> Complete the help exchange and leave feedback.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <div class="container">
+                <h2 class="section-title">Contact Us</h2>
+                <div class="contact-content">
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <p>support@careconnect.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <div>
+                                <h4>Phone</h4>
+                                <p>+1 (555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <h4>Address</h4>
+                                <p>123 Community Street<br>Neighborhood City, NC 12345</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Help Center Section -->
+        <section id="help-center" class="section">
+            <div class="container">
+                <h2 class="section-title">Help Center</h2>
+                <div class="help-content">
+                    <div class="help-categories">
+                        <div class="help-category">
+                            <h3><i class="fas fa-question-circle"></i> Getting Started</h3>
+                            <ul>
+                                <li><strong>How to create an account:</strong> Click "Register" and fill in your details</li>
+                                <li><strong>How to post a help request:</strong> Click "Create Request" and describe what you need</li>
+                                <li><strong>How to offer help:</strong> Browse requests and click "Offer Help" on ones you can assist with</li>
+                                <li><strong>How to chat with others:</strong> Use the chat feature once you've connected with someone</li>
+                            </ul>
+                        </div>
+                        <div class="help-category">
+                            <h3><i class="fas fa-shield-alt"></i> Safety & Security</h3>
+                            <ul>
+                                <li><strong>Meeting safely:</strong> Always meet in public places</li>
+                                <li><strong>Verifying users:</strong> Look for verified badges on user profiles</li>
+                                <li><strong>Reporting issues:</strong> Use the report button if you encounter problems</li>
+                                <li><strong>Privacy settings:</strong> Control what information is visible on your profile</li>
+                            </ul>
+                        </div>
+                        <div class="help-category">
+                            <h3><i class="fas fa-cog"></i> Account & Settings</h3>
+                            <ul>
+                                <li><strong>Updating profile:</strong> Go to Profile section to edit your information</li>
+                                <li><strong>Changing password:</strong> Use the Profile section to update your password</li>
+                                <li><strong>Notification settings:</strong> Manage your email and app notifications</li>
+                                <li><strong>Deleting account:</strong> Contact support to request account deletion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Safety Guidelines Section -->
+        <section id="safety" class="section">
+            <div class="container">
+                <h2 class="section-title">Safety Guidelines</h2>
+                <div class="safety-content">
+                    <div class="safety-guidelines">
+                        <div class="guideline">
+                            <h3><i class="fas fa-user-check"></i> Verify Before Meeting</h3>
+                            <p>Always verify the identity of the person you're meeting. Look for verified badges and read their profile reviews.</p>
+                        </div>
+                        <div class="guideline">
+                            <h3><i class="fas fa-map-marker-alt"></i> Meet in Public Places</h3>
+                            <p>Choose well-lit, public locations for meetings. Coffee shops, libraries, and community centers are good options.</p>
+                        </div>
+                        <div class="guideline">
+                            <h3><i class="fas fa-phone"></i> Stay Connected</h3>
+                            <p>Let a friend or family member know where you're going and who you're meeting. Keep your phone charged and accessible.</p>
+                        </div>
+                        <div class="guideline">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Trust Your Instincts</h3>
+                            <p>If something feels wrong, don't proceed. It's okay to cancel or reschedule if you're uncomfortable.</p>
+                        </div>
+                        <div class="guideline">
+                            <h3><i class="fas fa-flag"></i> Report Concerns</h3>
+                            <p>If you encounter suspicious behavior or feel unsafe, report it immediately using our reporting system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privacy Policy Section -->
+        <section id="privacy" class="section">
+            <div class="container">
+                <h2 class="section-title">Privacy Policy</h2>
+                <div class="privacy-content">
+                    <div class="policy-section">
+                        <h3>Information We Collect</h3>
+                        <p>We collect information you provide directly to us, such as when you create an account, post requests, or communicate with other users.</p>
+                    </div>
+                    <div class="policy-section">
+                        <h3>How We Use Your Information</h3>
+                        <p>We use your information to provide our services, connect you with other community members, and improve our platform.</p>
+                    </div>
+                    <div class="policy-section">
+                        <h3>Information Sharing</h3>
+                        <p>We do not sell your personal information. We may share information with other users as part of our service, but only with your consent.</p>
+                    </div>
+                    <div class="policy-section">
+                        <h3>Data Security</h3>
+                        <p>We implement appropriate security measures to protect your personal information from unauthorized access or disclosure.</p>
+                    </div>
+                    <div class="policy-section">
+                        <h3>Your Rights</h3>
+                        <p>You have the right to access, update, or delete your personal information. Contact us to exercise these rights.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Terms of Service Section -->
+        <section id="terms" class="section">
+            <div class="container">
+                <h2 class="section-title">Terms of Service</h2>
+                <div class="terms-content">
+                    <div class="terms-section">
+                        <h3>Acceptance of Terms</h3>
+                        <p>By using CareConnect, you agree to these terms and our community guidelines.</p>
+                    </div>
+                    <div class="terms-section">
+                        <h3>User Responsibilities</h3>
+                        <ul>
+                            <li>Provide accurate and truthful information</li>
+                            <li>Respect other users and their privacy</li>
+                            <li>Follow all applicable laws and regulations</li>
+                            <li>Report suspicious or inappropriate behavior</li>
+                        </ul>
+                    </div>
+                    <div class="terms-section">
+                        <h3>Prohibited Activities</h3>
+                        <ul>
+                            <li>Harassment or bullying of other users</li>
+                            <li>Posting false or misleading information</li>
+                            <li>Using the platform for commercial purposes without permission</li>
+                            <li>Attempting to access other users' accounts</li>
+                        </ul>
+                    </div>
+                    <div class="terms-section">
+                        <h3>Limitation of Liability</h3>
+                        <p>CareConnect is not responsible for the actions of users or the outcomes of help exchanges. Users interact at their own risk.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-heart"></i>
+                        <span>CareConnect</span>
+                    </div>
+                    <p>Building stronger communities through mutual support and care.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#requests">Help Requests</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#help-center">Help Center</a></li>
+                        <li><a href="#safety">Safety Guidelines</a></li>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 CareConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
