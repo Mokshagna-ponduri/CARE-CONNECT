@@ -340,6 +340,42 @@ router.put('/me/avatar', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/users/admin/stats
+// @desc    Get admin statistics (admin only)
+// @access  Private (Admin)
+router.get('/admin/stats', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalRequests = await HelpRequest.countDocuments();
+    const activeRequests = await HelpRequest.countDocuments({ status: 'open' });
+    const completedRequests = await HelpRequest.countDocuments({ status: 'completed' });
 
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('-password');
+
+    const recentRequests = await HelpRequest.find()
+      .populate('requester', 'name')
+      .populate('helper', 'name')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    const stats = {
+      totalUsers,
+      totalRequests,
+      activeRequests,
+      completedRequests,
+      completionRate: totalRequests > 0 ? (completedRequests / totalRequests * 100).toFixed(1) : 0,
+      recentUsers,
+      recentRequests
+    };
+
+    res.json({ stats });
+  } catch (error) {
+    console.error('Get admin stats error:', error);
+    res.status(500).json({ message: 'Server error while fetching admin statistics' });
+  }
+});
 
 module.exports = router; 

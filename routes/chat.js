@@ -20,6 +20,20 @@ router.get('/conversations', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/chat/user-chats
+// @desc    Get user's active chats
+// @access  Private
+router.get('/user-chats', auth, async (req, res) => {
+  try {
+    const chats = await Chat.getUserChats(req.user._id);
+
+    res.json({ chats });
+  } catch (error) {
+    console.error('Get user chats error:', error);
+    res.status(500).json({ message: 'Server error while fetching user chats' });
+  }
+});
+
 // @route   GET /api/chat/:chatId
 // @desc    Get chat messages
 // @access  Private

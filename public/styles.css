@@ -1444,4 +1444,66 @@ main {
     .profile-stats {
         grid-template-columns: 1fr;
     }
+}
+
+/* Additional Chat and Request Styles */
+.chat-item-avatar {
+    flex-shrink: 0;
+}
+
+.chat-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.chat-item-header h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.chat-preview {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-context {
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+.request-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.request-details {
+    padding: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.detail-row strong {
+    display: inline-block;
+    min-width: 100px;
+    color: var(--text-primary);
 } 

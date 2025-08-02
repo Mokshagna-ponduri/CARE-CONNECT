@@ -103,7 +103,7 @@ function initializeNavigation() {
     });
 
     document.getElementById('offer-help-btn').addEventListener('click', () => {
-        showSection('help-requests');
+        showSection('requests');
     });
 
     // Footer links
@@ -112,49 +112,68 @@ function initializeNavigation() {
             e.preventDefault();
             const section = link.getAttribute('href').substring(1);
             showSection(section);
+
+            // Update active link in navigation
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const navLink = document.querySelector(`.nav-link[href="#${section}"]`);
+            if (navLink) navLink.classList.add('active');
         });
     });
 }
 
+// Section management
 function showSection(sectionId) {
     // Hide all sections
-    document.querySelectorAll('section').forEach(section => {
-        section.style.display = 'none';
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
     });
 
-    // Show the selected section
+    // Show target section
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
-        targetSection.style.display = 'block';
-        
-        // Load section-specific content
-        switch(sectionId) {
-            case 'help-requests':
-                loadHelpRequests();
-                break;
-            case 'profile':
+        targetSection.classList.add('active');
+    }
+
+    // Load section-specific content
+    switch (sectionId) {
+        case 'requests':
+            loadHelpRequests();
+            break;
+        case 'profile':
+            if (currentUser) {
                 loadUserProfile();
-                break;
-            case 'my-requests':
+            } else {
+                showModal('login-modal');
+            }
+            break;
+        case 'my-requests':
+            if (currentUser) {
                 loadMyRequests();
-                break;
-            case 'chats':
+            } else {
+                showModal('login-modal');
+            }
+            break;
+        case 'chats':
+            if (currentUser) {
                 loadChats();
-                break;
-        }
+            } else {
+                showModal('login-modal');
+            }
+            break;
     }
 }
 
+// Modal management
 function initializeModals() {
     // Close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modal = btn.closest('.modal');
+        btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.modal');
             hideModal(modal.id);
         });
     });
 
-    // Close modal when clicking outside
+    // Close modal on outside click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -163,13 +182,20 @@ function initializeModals() {
         });
     });
 
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.active').forEach(modal => {
-                hideModal(modal.id);
-            });
-        }
+    // Auth modal switches
+    document.getElementById('switch-to-register').addEventListener('click', () => {
+        hideModal('login-modal');
+        showModal('register-modal');
+    });
+
+    document.getElementById('switch-to-login').addEventListener('click', () => {
+        hideModal('register-modal');
+        showModal('login-modal');
+    });
+
+    // Cancel buttons
+    document.getElementById('cancel-create').addEventListener('click', () => {
+        hideModal('create-request-modal');
     });
 }
 
@@ -189,6 +215,7 @@ function hideModal(modalId) {
     }
 }
 
+// Form initialization
 function initializeForms() {
     // Login form
     document.getElementById('login-form').addEventListener('submit', handleLogin);
@@ -199,38 +226,11 @@ function initializeForms() {
     // Create request form
     document.getElementById('create-request-form').addEventListener('submit', handleCreateRequest);
     
-    // Profile update form
+    // Profile form
     document.getElementById('profile-form').addEventListener('submit', handleUpdateProfile);
-    
-    // Chat form
-    document.getElementById('chat-form').addEventListener('submit', sendMessage);
-    
-    // Use current location button
-    document.getElementById('use-current-location').addEventListener('click', () => {
-        getCurrentLocation().then(location => {
-            document.getElementById('request-location').value = location;
-        });
-    });
-
-    // Modal switching functionality
-    const switchToRegisterBtn = document.getElementById('switch-to-register');
-    const switchToLoginBtn = document.getElementById('switch-to-login');
-    
-    if (switchToRegisterBtn) {
-        switchToRegisterBtn.addEventListener('click', () => {
-            hideModal('login-modal');
-            showModal('register-modal');
-        });
-    }
-    
-    if (switchToLoginBtn) {
-        switchToLoginBtn.addEventListener('click', () => {
-            hideModal('register-modal');
-            showModal('login-modal');
-        });
-    }
 }
 
+// Authentication
 async function handleLogin(e) {
     e.preventDefault();
     
@@ -253,10 +253,10 @@ async function handleLogin(e) {
 
         if (response.ok) {
             localStorage.setItem('token', result.token);
-            await fetchUserProfile();
+            currentUser = result.user;
+            updateUIForUser();
             hideModal('login-modal');
             showToast('Login successful!', 'success');
-            e.target.reset();
         } else {
             showToast(result.message || 'Login failed', 'error');
         }
@@ -273,7 +273,9 @@ async function handleRegister(e) {
     const data = {
         name: formData.get('name'),
         email: formData.get('email'),
-        password: formData.get('password')
+        password: formData.get('password'),
+        phone: formData.get('phone'),
+        role: formData.get('role')
     };
 
     try {
@@ -289,10 +291,10 @@ async function handleRegister(e) {
 
         if (response.ok) {
             localStorage.setItem('token', result.token);
-            await fetchUserProfile();
+            currentUser = result.user;
+            updateUIForUser();
             hideModal('register-modal');
-            showToast('Registration successful!', 'success');
-            e.target.reset();
+            showToast('Account created successfully!', 'success');
         } else {
             showToast(result.message || 'Registration failed', 'error');
         }
@@ -314,17 +316,12 @@ async function fetchUserProfile() {
             const result = await response.json();
             currentUser = result.user;
             updateUIForUser();
-            initializeSocketOnLogin();
         } else {
             localStorage.removeItem('token');
-            currentUser = null;
-            updateUIForUser();
         }
     } catch (error) {
         console.error('Fetch user profile error:', error);
         localStorage.removeItem('token');
-        currentUser = null;
-        updateUIForUser();
     }
 }
 
@@ -333,76 +330,56 @@ function logout() {
     currentUser = null;
     updateUIForUser();
     showSection('home');
-    showToast('Logged out successfully', 'success');
+    showToast('Logged out successfully', 'info');
+    
+    // Disconnect socket if connected
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
 }
 
 function updateUIForUser() {
-    const authButtons = document.getElementById('auth-buttons');
-    const userMenu = document.getElementById('user-menu');
+    const navAuth = document.getElementById('nav-auth');
+    const navUser = document.getElementById('nav-user');
+    const createRequestBtn = document.getElementById('create-request-btn');
     const profileNavLink = document.getElementById('profile-nav-link');
 
     if (currentUser) {
-        authButtons.style.display = 'none';
-        userMenu.style.display = 'block';
+        navAuth.style.display = 'none';
+        navUser.style.display = 'block';
+        createRequestBtn.style.display = 'block';
+        profileNavLink.style.display = 'block';
         
-        // Update profile display
-        updateProfileDisplay();
-        
-        // Show profile nav link for logged in users
-        if (profileNavLink) {
-            profileNavLink.style.display = 'block';
+        // Update user info
+        document.getElementById('user-name').textContent = currentUser.name;
+        if (currentUser.profile?.avatar) {
+            document.getElementById('user-avatar').src = currentUser.profile.avatar;
         }
     } else {
-        authButtons.style.display = 'block';
-        userMenu.style.display = 'none';
-        
-        // Hide profile nav link for logged out users
-        if (profileNavLink) {
-            profileNavLink.style.display = 'none';
-        }
+        navAuth.style.display = 'flex';
+        navUser.style.display = 'none';
+        createRequestBtn.style.display = 'none';
+        profileNavLink.style.display = 'none';
     }
 }
 
+// Help Requests
 function initializeHelpRequests() {
     // Filters
-    const categoryFilter = document.getElementById('category-filter');
-    const urgencyFilter = document.getElementById('urgency-filter');
-    const locationFilterBtn = document.getElementById('location-filter-btn');
-    
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', updateFilters);
-    }
-    
-    if (urgencyFilter) {
-        urgencyFilter.addEventListener('change', updateFilters);
-    }
-    
-    if (locationFilterBtn) {
-        locationFilterBtn.addEventListener('click', useLocationFilter);
-    }
+    document.getElementById('category-filter').addEventListener('change', updateFilters);
+    document.getElementById('urgency-filter').addEventListener('change', updateFilters);
+    document.getElementById('location-filter-btn').addEventListener('click', useLocationFilter);
     
     // Pagination
-    const prevBtn = document.getElementById('prev-page');
-    const nextBtn = document.getElementById('next-page');
-    
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => changePage(-1));
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => changePage(1));
-    }
+    document.getElementById('prev-page').addEventListener('click', () => changePage(-1));
+    document.getElementById('next-page').addEventListener('click', () => changePage(1));
 }
 
 async function loadHelpRequests() {
     const loading = document.getElementById('requests-loading');
     const grid = document.getElementById('requests-grid');
     const noRequests = document.getElementById('no-requests');
-
-    if (!loading || !grid || !noRequests) {
-        console.error('Required elements not found');
-        return;
-    }
 
     loading.style.display = 'block';
     grid.innerHTML = '';
@@ -413,8 +390,6 @@ async function loadHelpRequests() {
             page: currentPage,
             ...currentFilters
         });
-
-        console.log('Loading help requests with filters:', currentFilters);
 
         const response = await fetch(`${API_BASE}/help-requests?${params}`);
         const result = await response.json();
@@ -439,8 +414,6 @@ async function loadHelpRequests() {
 
 function displayHelpRequests(requests, gridElement = null) {
     const grid = gridElement || document.getElementById('requests-grid');
-    if (!grid) return;
-    
     grid.innerHTML = '';
 
     requests.forEach(request => {
@@ -481,18 +454,7 @@ function showRequestDetails(request) {
     const title = document.getElementById('request-details-title');
     const body = document.getElementById('request-details-body');
 
-    if (!modal || !title || !body) {
-        console.error('Request details modal elements not found');
-        return;
-    }
-
     title.textContent = request.title;
-    
-    // Create accept button HTML only if user is logged in and not the requester
-    const acceptButtonHtml = (currentUser && request.requester?._id !== currentUser._id && request.status === 'open') 
-        ? `<button class="btn btn-primary" onclick="acceptRequest('${request._id}')">Accept Request</button>` 
-        : '';
-
     body.innerHTML = `
         <div class="request-details">
             <div class="detail-row">
@@ -515,19 +477,35 @@ function showRequestDetails(request) {
             <div class="detail-row">
                 <strong>Posted:</strong> ${formatTime(request.createdAt)}
             </div>
-            <div class="detail-row">
-                <strong>Status:</strong> ${request.status}
+            <div class="request-actions">
+                ${request.status === 'open' && currentUser && request.requester?._id !== currentUser._id ? 
+                    `<button class="btn btn-primary" id="accept-request-btn" data-request-id="${request._id}">Accept Request</button>` : 
+                    ''
+                }
+                ${request.status === 'in-progress' && currentUser && 
+                    (request.requester?._id === currentUser._id || request.helper?._id === currentUser._id) ? 
+                    `<button class="btn btn-secondary" id="open-chat-btn" data-request-id="${request._id}">Open Chat</button>` : 
+                    ''
+                }
             </div>
-            ${acceptButtonHtml}
         </div>
     `;
+
+    // Add event listeners for buttons
+    const acceptBtn = document.getElementById('accept-request-btn');
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', () => acceptRequest(request._id));
+    }
+
+    const chatBtn = document.getElementById('open-chat-btn');
+    if (chatBtn) {
+        chatBtn.addEventListener('click', () => openChat(request._id));
+    }
 
     showModal('request-details-modal');
 }
 
 async function acceptRequest(requestId) {
-    console.log('Accepting request:', requestId);
-    
     try {
         const response = await fetch(`${API_BASE}/help-requests/${requestId}/accept`, {
             method: 'PUT',
@@ -542,6 +520,17 @@ async function acceptRequest(requestId) {
         if (response.ok) {
             hideModal('request-details-modal');
             showToast('Request accepted successfully!', 'success');
+            
+            // Open chat automatically after accepting
+            if (result.chat) {
+                currentChat = result.chat;
+                displayChat(currentChat);
+                if (socket) {
+                    socket.emit('join-room', currentChat._id);
+                }
+                showModal('chat-modal');
+            }
+            
             loadHelpRequests(); // Refresh the list
         } else {
             showToast(result.message || 'Failed to accept request', 'error');
@@ -553,23 +542,11 @@ async function acceptRequest(requestId) {
 }
 
 function updateFilters() {
-    const categoryFilter = document.getElementById('category-filter');
-    const urgencyFilter = document.getElementById('urgency-filter');
-    
     currentFilters = {
-        category: categoryFilter ? categoryFilter.value : '',
-        urgency: urgencyFilter ? urgencyFilter.value : ''
+        category: document.getElementById('category-filter').value,
+        urgency: document.getElementById('urgency-filter').value
     };
-    
-    // Remove empty filters
-    Object.keys(currentFilters).forEach(key => {
-        if (!currentFilters[key]) {
-            delete currentFilters[key];
-        }
-    });
-    
     currentPage = 1;
-    console.log('Updated filters:', currentFilters);
     loadHelpRequests();
 }
 
@@ -602,8 +579,6 @@ function updatePagination(pagination) {
     const pageInfo = document.getElementById('page-info');
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
-
-    if (!paginationEl || !pageInfo || !prevBtn || !nextBtn) return;
 
     if (pagination.pages > 1) {
         paginationEl.style.display = 'flex';
@@ -644,11 +619,11 @@ async function handleCreateRequest(e) {
 
         if (response.ok) {
             hideModal('create-request-modal');
-            showToast('Help request created successfully!', 'success');
             e.target.reset();
-            loadHelpRequests(); // Refresh the list
+            showToast('Help request created successfully!', 'success');
+            loadHelpRequests();
         } else {
-            showToast(result.message || 'Failed to create help request', 'error');
+            showToast(result.message || 'Failed to create request', 'error');
         }
     } catch (error) {
         console.error('Create request error:', error);
@@ -658,43 +633,50 @@ async function handleCreateRequest(e) {
 
 // Chat functionality
 function initializeChat() {
-    const chatForm = document.getElementById('chat-form');
-    if (chatForm) {
-        chatForm.addEventListener('submit', sendMessage);
-    }
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-message-btn');
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
 }
 
 function initializeSocket() {
-    if (socket) {
-        socket.disconnect();
+    if (!currentUser || socket) return;
+
+    // Check if Socket.io is available
+    if (typeof io === 'undefined') {
+        console.log('Socket.io not available, chat features will be limited');
+        return;
     }
 
-    socket = io();
+    try {
+        socket = io();
 
-    socket.on('connect', () => {
-        console.log('Connected to chat server');
-    });
+        socket.on('connect', () => {
+            console.log('Connected to chat server');
+        });
 
-    socket.on('receive-message', (data) => {
-        if (currentChat && data.roomId === currentChat._id) {
-            addMessageToChat(data);
-        }
-    });
+        socket.on('receive-message', (data) => {
+            if (currentChat && data.roomId === currentChat._id) {
+                addMessageToChat(data);
+            }
+        });
 
-    socket.on('disconnect', () => {
-        console.log('Disconnected from chat server');
-    });
-}
-
-function initializeSocketOnLogin() {
-    if (currentUser) {
-        initializeSocket();
+        socket.on('disconnect', () => {
+            console.log('Disconnected from chat server');
+        });
+    } catch (error) {
+        console.log('Socket.io connection failed:', error);
     }
 }
 
 async function openChat(helpRequestId) {
     try {
-        const response = await fetch(`${API_BASE}/chat/${helpRequestId}`, {
+        const response = await fetch(`${API_BASE}/chat/help-request/${helpRequestId}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -704,84 +686,100 @@ async function openChat(helpRequestId) {
 
         if (response.ok) {
             currentChat = result.chat;
-            displayChat(result.chat);
-            socket.emit('join-room', result.chat._id);
+            if (currentChat) {
+                displayChat(currentChat);
+                if (socket) {
+                    socket.emit('join-room', currentChat._id);
+                }
+            } else {
+                // Create new chat
+                await createChat(helpRequestId);
+            }
+            showModal('chat-modal');
         } else {
-            showToast(result.message || 'Failed to open chat', 'error');
+            showToast('Failed to load chat', 'error');
         }
     } catch (error) {
         console.error('Open chat error:', error);
-        showToast('An error occurred while opening the chat', 'error');
+        showToast('An error occurred while opening chat', 'error');
     }
 }
 
 async function createChat(helpRequestId) {
     try {
-        const response = await fetch(`${API_BASE}/chat`, {
+        const response = await fetch(`${API_BASE}/chat/start`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ helpRequestId })
+            body: JSON.stringify({
+                helpRequestId: helpRequestId,
+                otherUserId: currentUser._id // This would need to be the other user's ID
+            })
         });
 
         const result = await response.json();
 
         if (response.ok) {
             currentChat = result.chat;
-            displayChat(result.chat);
-            socket.emit('join-room', result.chat._id);
+            displayChat(currentChat);
+            if (socket) {
+                socket.emit('join-room', currentChat._id);
+            }
         } else {
-            showToast(result.message || 'Failed to create chat', 'error');
+            showToast('Failed to create chat', 'error');
         }
     } catch (error) {
         console.error('Create chat error:', error);
-        showToast('An error occurred while creating the chat', 'error');
+        showToast('An error occurred while creating chat', 'error');
     }
 }
 
 function displayChat(chat) {
-    const chatContainer = document.getElementById('chat-container');
-    const chatMessages = document.getElementById('chat-messages');
-    const chatForm = document.getElementById('chat-form');
+    const messagesContainer = document.getElementById('chat-messages');
+    const chatTitle = document.getElementById('chat-title');
 
-    if (!chatContainer || !chatMessages || !chatForm) return;
+    // Set chat title
+    const otherParticipant = chat.participants.find(p => p._id !== currentUser._id);
+    chatTitle.textContent = `Chat with ${otherParticipant?.name || 'User'}`;
 
-    chatContainer.style.display = 'block';
-    chatMessages.innerHTML = '';
+    // Display messages
+    messagesContainer.innerHTML = '';
+    if (chat.messages && chat.messages.length > 0) {
+        chat.messages.forEach(message => {
+            addMessageToChat(message);
+        });
+    }
 
-    chat.messages.forEach(message => {
-        addMessageToChat(message);
-    });
-
-    chatForm.style.display = 'block';
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 function addMessageToChat(message) {
-    const chatMessages = document.getElementById('chat-messages');
-    if (!chatMessages) return;
+    const messagesContainer = document.getElementById('chat-messages');
+    const isSent = message.sender === currentUser._id || message.sender?._id === currentUser._id;
 
     const messageEl = document.createElement('div');
-    messageEl.className = `message ${message.sender === currentUser._id ? 'sent' : 'received'}`;
+    messageEl.className = `message ${isSent ? 'sent' : 'received'}`;
     messageEl.innerHTML = `
-        <div class="message-content">
-            <p>${message.message}</p>
-            <span class="message-time">${formatTime(message.createdAt)}</span>
+        <img src="${message.sender?.profile?.avatar || 'https://via.placeholder.com/32'}" 
+             alt="Avatar" class="message-avatar">
+        <div>
+            <div class="message-content">${message.content}</div>
+            <div class="message-time">${formatTime(message.createdAt)}</div>
         </div>
     `;
 
-    chatMessages.appendChild(messageEl);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    messagesContainer.appendChild(messageEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-async function sendMessage(e) {
-    e.preventDefault();
-
+async function sendMessage() {
     const messageInput = document.getElementById('message-input');
-    const message = messageInput.value.trim();
+    const content = messageInput.value.trim();
 
-    if (!message || !currentChat) return;
+    if (!content || !currentChat) return;
 
     try {
         const response = await fetch(`${API_BASE}/chat/${currentChat._id}/messages`, {
@@ -790,203 +788,124 @@ async function sendMessage(e) {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ content })
         });
 
         const result = await response.json();
 
         if (response.ok) {
             messageInput.value = '';
-            addMessageToChat(result.message);
+            addMessageToChat(result.chat.messages[result.chat.messages.length - 1]);
         } else {
-            showToast(result.message || 'Failed to send message', 'error');
+            showToast('Failed to send message', 'error');
         }
     } catch (error) {
         console.error('Send message error:', error);
-        showToast('An error occurred while sending the message', 'error');
+        showToast('An error occurred while sending message', 'error');
     }
 }
 
-// Profile functionality
+// Profile management
 async function loadUserProfile() {
     if (!currentUser) return;
 
     try {
-        // Get user profile data
-        const profileResponse = await fetch(`${API_BASE}/auth/me`, {
+        // Load user stats
+        const statsResponse = await fetch(`${API_BASE}/users/me/stats`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
 
-        const profileResult = await profileResponse.json();
-
-        if (profileResponse.ok) {
-            // Update currentUser with fresh data
-            currentUser = profileResult.user;
-            
-            // Update profile display
-            updateProfileDisplay();
-            updateProfileForm();
-            
-            // Get user stats
-            const statsResponse = await fetch(`${API_BASE}/users/me/stats`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            const statsResult = await statsResponse.json();
-
-            if (statsResponse.ok) {
-                updateProfileStats(statsResult.stats);
-            }
-        } else {
-            showToast('Failed to load profile', 'error');
+        if (statsResponse.ok) {
+            const stats = await statsResponse.json();
+            updateProfileStats(stats.stats);
         }
+
+        // Load recent activity
+        const activityResponse = await fetch(`${API_BASE}/users/me/requests?limit=5`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (activityResponse.ok) {
+            const activity = await activityResponse.json();
+            updateProfileActivity(activity.helpRequests);
+        }
+
+        // Update profile form
+        updateProfileForm();
     } catch (error) {
         console.error('Load profile error:', error);
-        showToast('An error occurred while loading profile', 'error');
-    }
-}
-
-function updateProfileDisplay() {
-    if (!currentUser) return;
-
-    // Update navigation bar user info
-    const userNameElement = document.getElementById('user-name');
-    const userAvatarElement = document.getElementById('user-avatar');
-    
-    if (userNameElement) {
-        userNameElement.textContent = currentUser.name || 'User';
-    }
-    
-    if (userAvatarElement) {
-        userAvatarElement.src = currentUser.profile?.avatar || 'https://via.placeholder.com/32';
-        userAvatarElement.alt = currentUser.name || 'User Avatar';
-    }
-
-    // Update profile page elements
-    const profileNameElement = document.getElementById('profile-name');
-    const profileEmailElement = document.getElementById('profile-email');
-    const profileAvatarElement = document.getElementById('profile-avatar-img');
-    
-    if (profileNameElement) {
-        profileNameElement.textContent = currentUser.name || 'User Name';
-    }
-    
-    if (profileEmailElement) {
-        profileEmailElement.textContent = currentUser.email || 'user@example.com';
-    }
-    
-    if (profileAvatarElement) {
-        profileAvatarElement.src = currentUser.profile?.avatar || 'https://via.placeholder.com/120';
-        profileAvatarElement.alt = currentUser.name || 'Profile';
+        showToast('Failed to load profile data', 'error');
     }
 }
 
 function updateProfileStats(stats) {
-    const statsContainer = document.getElementById('profile-stats');
-    if (!statsContainer) return;
+    document.getElementById('requests-made').textContent = stats.requested.total;
+    document.getElementById('requests-helped').textContent = stats.helped.total;
+    
+    const completionRate = stats.requested.total > 0 ? 
+        Math.round((stats.requested.completed / stats.requested.total) * 100) : 0;
+    document.getElementById('completion-rate').textContent = `${completionRate}%`;
 
-    // Calculate totals
-    const totalRequests = (stats.requested?.total || 0) + (stats.helped?.total || 0);
-    const completedRequests = (stats.requested?.completed || 0) + (stats.helped?.completed || 0);
-    const activeRequests = (stats.requested?.open || 0) + (stats.requested?.inProgress || 0) + (stats.helped?.inProgress || 0);
-    const helpProvided = stats.helped?.total || 0;
-
-    statsContainer.innerHTML = `
-        <div class="stat-card">
-            <div class="stat-number">${totalRequests}</div>
-            <div class="stat-label">Total Requests</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">${completedRequests}</div>
-            <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">${activeRequests}</div>
-            <div class="stat-label">Active</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">${helpProvided}</div>
-            <div class="stat-label">Help Provided</div>
-        </div>
-    `;
+    // Update rating
+    if (stats.rating.average > 0) {
+        document.getElementById('profile-rating-text').textContent = 
+            `${stats.rating.average} (${stats.rating.total} reviews)`;
+    }
 }
 
 function updateProfileActivity(requests) {
-    const activityContainer = document.getElementById('profile-activity');
-    if (!activityContainer) return;
+    const activityList = document.getElementById('activity-list');
+    activityList.innerHTML = '';
 
-    if (requests.length === 0) {
-        activityContainer.innerHTML = '<p>No recent activity</p>';
-        return;
-    }
-
-    const activityHTML = requests.map(request => `
-        <div class="activity-item">
+    requests.forEach(request => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        activityItem.innerHTML = `
             <div class="activity-icon">
-                ${getActivityIcon(request.status)}
+                <i class="fas fa-${getActivityIcon(request.status)}"></i>
             </div>
             <div class="activity-content">
                 <h4>${request.title}</h4>
-                <p>${request.description}</p>
-                <span class="activity-time">${formatTime(request.createdAt)}</span>
+                <p>${request.status} • ${formatTime(request.updatedAt)}</p>
             </div>
-        </div>
-    `).join('');
-
-    activityContainer.innerHTML = activityHTML;
+        `;
+        activityList.appendChild(activityItem);
+    });
 }
 
 function getActivityIcon(status) {
-    const icons = {
-        'open': '<i class="fas fa-clock"></i>',
-        'in-progress': '<i class="fas fa-spinner"></i>',
-        'completed': '<i class="fas fa-check-circle"></i>',
-        'cancelled': '<i class="fas fa-times-circle"></i>'
-    };
-    return icons[status] || '<i class="fas fa-question-circle"></i>';
+    switch (status) {
+        case 'open': return 'clock';
+        case 'in-progress': return 'spinner';
+        case 'completed': return 'check';
+        case 'cancelled': return 'times';
+        default: return 'info';
+    }
 }
 
 function updateProfileForm() {
-    const form = document.getElementById('profile-form');
-    if (!form || !currentUser) return;
+    if (!currentUser) return;
 
-    // Update form fields with current user data
-    const nameInput = form.querySelector('[name="name"]');
-    const phoneInput = form.querySelector('[name="phone"]');
-    const bioInput = form.querySelector('[name="bio"]');
-    const skillsInput = form.querySelector('[name="skills"]');
-    
-    if (nameInput) {
-        nameInput.value = currentUser.name || '';
-    }
-    
-    if (phoneInput) {
-        phoneInput.value = currentUser.phone || '';
-    }
-    
-    if (bioInput) {
-        bioInput.value = currentUser.profile?.bio || '';
-    }
-    
-    if (skillsInput) {
-        skillsInput.value = currentUser.profile?.skills?.join(', ') || '';
-    }
+    document.getElementById('profile-name-input').value = currentUser.name || '';
+    document.getElementById('profile-phone').value = currentUser.phone || '';
+    document.getElementById('profile-bio').value = currentUser.profile?.bio || '';
+    document.getElementById('profile-skills').value = currentUser.profile?.skills?.join(', ') || '';
 }
 
 async function handleUpdateProfile(e) {
     e.preventDefault();
-
+    
     const formData = new FormData(e.target);
     const data = {
         name: formData.get('name'),
         phone: formData.get('phone'),
         profile: {
             bio: formData.get('bio'),
-            skills: formData.get('skills') ? formData.get('skills').split(',').map(skill => skill.trim()) : []
+            skills: formData.get('skills').split(',').map(s => s.trim()).filter(s => s)
         }
     };
 
@@ -1017,7 +936,7 @@ async function handleUpdateProfile(e) {
 
 // Location services
 function initializeLocation() {
-    // Location functionality will be implemented here
+    document.getElementById('use-current-location').addEventListener('click', getCurrentLocation);
 }
 
 function getCurrentPosition() {
@@ -1027,37 +946,47 @@ function getCurrentPosition() {
 }
 
 async function getCurrentLocation() {
-    try {
-        const position = await getCurrentPosition();
-        const { latitude, longitude } = position.coords;
-        
-        // Reverse geocoding would be implemented here
-        return `${latitude}, ${longitude}`;
-    } catch (error) {
-        console.error('Get location error:', error);
-        throw error;
+    if (navigator.geolocation) {
+        try {
+            const position = await getCurrentPosition();
+            const { latitude, longitude } = position.coords;
+            
+            // Update location input
+            document.getElementById('request-location').value = `${latitude}, ${longitude}`;
+            
+            // Update user location in profile
+            if (currentUser) {
+                await updateUserLocation(latitude, longitude);
+            }
+            
+            showToast('Location updated successfully', 'success');
+        } catch (error) {
+            showToast('Failed to get location', 'error');
+        }
+    } else {
+        showToast('Geolocation is not supported by this browser', 'error');
     }
 }
 
 async function updateUserLocation(latitude, longitude) {
     try {
-        const response = await fetch(`${API_BASE}/users/location`, {
+        const response = await fetch(`${API_BASE}/auth/location`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ latitude, longitude })
+            body: JSON.stringify({
+                coordinates: [longitude, latitude]
+            })
         });
 
         if (response.ok) {
-            showToast('Location updated successfully', 'success');
-        } else {
-            showToast('Failed to update location', 'error');
+            const result = await response.json();
+            currentUser = result.user;
         }
     } catch (error) {
         console.error('Update location error:', error);
-        showToast('An error occurred while updating location', 'error');
     }
 }
 
@@ -1072,54 +1001,80 @@ function formatTime(timestamp) {
     const days = Math.floor(diff / 86400000);
     
     if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
     
     return date.toLocaleDateString();
 }
 
 function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
+    toast.className = `toast ${type}`;
     
-    document.body.appendChild(toast);
+    const icon = type === 'success' ? 'check-circle' :
+                 type === 'error' ? 'exclamation-circle' :
+                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
     
+    toast.innerHTML = `
+        <i class="fas fa-${icon} toast-icon"></i>
+        <div class="toast-content">
+            <div class="toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after 5 seconds
     setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
     
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
-    }, 3000);
+    // Close button
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    });
 }
 
+// Initialize socket when user logs in
 function initializeSocketOnLogin() {
-    if (currentUser) {
+    if (currentUser && !socket) {
         initializeSocket();
     }
 }
 
+// Load my requests
 async function loadMyRequests() {
-    if (!currentUser) return;
+    const loading = document.getElementById('my-requests-loading');
+    const grid = document.getElementById('my-requests-grid');
+    const noRequests = document.getElementById('no-my-requests');
+
+    loading.style.display = 'block';
+    grid.innerHTML = '';
+    noRequests.style.display = 'none';
 
     try {
-        const response = await fetch(`${API_BASE}/help-requests/my-requests`, {
+        const response = await fetch(`${API_BASE}/users/me/requests`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
 
-        const result = await response.json();
-
         if (response.ok) {
-            const container = document.getElementById('my-requests-container');
-            if (container) {
-                displayHelpRequests(result.helpRequests, container);
+            const result = await response.json();
+            if (result.helpRequests.length > 0) {
+                displayHelpRequests(result.helpRequests, grid);
+            } else {
+                noRequests.style.display = 'block';
             }
         } else {
             showToast('Failed to load your requests', 'error');
@@ -1127,43 +1082,34 @@ async function loadMyRequests() {
     } catch (error) {
         console.error('Load my requests error:', error);
         showToast('An error occurred while loading your requests', 'error');
+    } finally {
+        loading.style.display = 'none';
     }
 }
 
+// Load chats
 async function loadChats() {
-    if (!currentUser) return;
+    const loading = document.getElementById('chats-loading');
+    const chatsList = document.getElementById('chats-list');
+    const noChats = document.getElementById('no-chats');
+
+    loading.style.display = 'block';
+    chatsList.innerHTML = '';
+    noChats.style.display = 'none';
 
     try {
-        const response = await fetch(`${API_BASE}/chat`, {
+        const response = await fetch(`${API_BASE}/chat/user-chats`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
 
-        const result = await response.json();
-
         if (response.ok) {
-            const container = document.getElementById('chats-container');
-            if (container) {
-                container.innerHTML = '';
-                
-                result.chats.forEach(chat => {
-                    const chatEl = document.createElement('div');
-                    chatEl.className = 'chat-item';
-                    chatEl.innerHTML = `
-                        <div class="chat-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="chat-content">
-                            <div class="chat-name">${chat.participants.find(p => p._id !== currentUser._id)?.name || 'Unknown'}</div>
-                            <div class="chat-last-message">${chat.lastMessage?.message || 'No messages yet'}</div>
-                        </div>
-                        <div class="chat-time">${chat.lastMessage ? formatTime(chat.lastMessage.createdAt) : ''}</div>
-                    `;
-                    
-                    chatEl.addEventListener('click', () => openChat(chat.helpRequest));
-                    container.appendChild(chatEl);
-                });
+            const result = await response.json();
+            if (result.chats && result.chats.length > 0) {
+                displayChatsList(result.chats);
+            } else {
+                noChats.style.display = 'block';
             }
         } else {
             showToast('Failed to load chats', 'error');
@@ -1171,5 +1117,63 @@ async function loadChats() {
     } catch (error) {
         console.error('Load chats error:', error);
         showToast('An error occurred while loading chats', 'error');
+    } finally {
+        loading.style.display = 'none';
     }
-} 
+}
+
+function displayChatsList(chats) {
+    const chatsList = document.getElementById('chats-list');
+    chatsList.innerHTML = '';
+
+    if (!chats || chats.length === 0) {
+        const noChats = document.getElementById('no-chats');
+        if (noChats) {
+            noChats.style.display = 'block';
+        }
+        return;
+    }
+
+    chats.forEach(chat => {
+        const chatItem = document.createElement('div');
+        chatItem.className = 'chat-item';
+        
+        const otherParticipant = chat.participants.find(p => p._id !== currentUser._id);
+        const lastMessage = chat.lastMessage;
+        
+        chatItem.innerHTML = `
+            <div class="chat-item-avatar">
+                <img src="${otherParticipant?.profile?.avatar || 'https://via.placeholder.com/40'}" 
+                     alt="Avatar" class="chat-avatar">
+            </div>
+            <div class="chat-item-content">
+                <div class="chat-item-header">
+                    <h4>${otherParticipant?.name || 'User'}</h4>
+                    <span class="chat-time">${lastMessage?.timestamp ? formatTime(lastMessage.timestamp) : formatTime(chat.createdAt)}</span>
+                </div>
+                <p class="chat-preview">${lastMessage?.content || 'No messages yet'}</p>
+                <div class="chat-context">
+                    <small>${chat.helpRequest?.title || 'Help Request'}</small>
+                </div>
+            </div>
+        `;
+
+        chatItem.addEventListener('click', () => {
+            currentChat = chat;
+            displayChat(currentChat);
+            if (socket) {
+                socket.emit('join-room', currentChat._id);
+            }
+            showModal('chat-modal');
+        });
+
+        chatsList.appendChild(chatItem);
+    });
+}
+
+// Update the updateUIForUser function to initialize socket
+const originalUpdateUIForUser = updateUIForUser;
+updateUIForUser = function() {
+    originalUpdateUIForUser();
+    initializeSocketOnLogin();
+}; 

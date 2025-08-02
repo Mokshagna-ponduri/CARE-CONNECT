@@ -127,8 +127,11 @@ chatSchema.statics.findOrCreateChat = async function(participantIds, helpRequest
       unreadCount: new Map()
     });
     await chat.save();
-    chat = await chat.populate('participants', 'name profile.avatar');
   }
+  
+  // Always populate after save or find
+  chat = await chat.populate('participants', 'name profile.avatar');
+  chat = await chat.populate('helpRequest', 'title category status');
   
   return chat;
 };
@@ -136,13 +139,14 @@ chatSchema.statics.findOrCreateChat = async function(participantIds, helpRequest
 // Static method to get user's chats
 chatSchema.statics.getUserChats = function(userId) {
   return this.find({
-    participants: userId,
+    participants: { $in: [userId] },
     isActive: true
   })
   .populate('participants', 'name profile.avatar')
   .populate('helpRequest', 'title category status')
   .populate('lastMessage.sender', 'name profile.avatar')
-  .sort({ 'lastMessage.timestamp': -1 });
+  .populate('messages.sender', 'name profile.avatar')
+  .sort({ 'lastMessage.timestamp': -1, createdAt: -1 });
 };
 
 module.exports = mongoose.model('Chat', chatSchema); 
