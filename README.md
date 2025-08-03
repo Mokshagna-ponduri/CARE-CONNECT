@@ -54,7 +54,7 @@ CareConnect is a full-stack web application that bridges the gap between people 
    ```env
    MONGODB_URI=mongodb://localhost:27017/careconnect
    JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   PORT=3000
+   PORT=5678
    NODE_ENV=development
    ```
 
