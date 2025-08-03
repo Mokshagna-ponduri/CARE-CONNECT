@@ -31,7 +31,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Serve static files
-// app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -72,9 +72,9 @@ io.on('connection', (socket) => {
 });
 
 // Serve the main HTML file for all routes (SPA)
-/* app.get('*', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-}); */
+}); 
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
